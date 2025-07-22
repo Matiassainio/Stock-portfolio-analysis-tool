@@ -33,14 +33,58 @@ def analyze_stock(ticker):
     print(f"Keskimääräinen päivätuotto: {avg:.4%}")
     print(f"Volatiliteetti: {vol:.4%}")
     print(f"Sharpen suhde: {sharpe:.2f}")
+import pandas as pd
+
+def parse_portfolio_input(user_input):
+    lines = user_input.strip().split("\n")
+    portfolio_data = []
+    
+    for line in lines:
+        parts = line.strip().split()
+        if len(parts) != 2 or not parts[1].endswith('%'):
+            raise ValueError(f"Rivi ei ole oikeassa muodossa: '{line}' (muodon tulisi olla: 'TICKER 25%')")
+        
+        ticker = parts[0].upper()
+        try:
+            weight = float(parts[1].replace('%', '').replace(',', '.')) / 100
+        except ValueError:
+            raise ValueError(f"Paino ei ole numero: '{parts[1]}'")
+        
+        if not 0 <= weight <= 1:
+            raise ValueError(f"Painon tulee olla välillä 0–100 %. Annettu: {weight*100:.2f}%")
+        
+        portfolio_data.append({"Ticker": ticker, "Weight": weight})
+
+    portfolio_df = pd.DataFrame(portfolio_data)
+
+    total_weight = portfolio_df["Weight"].sum()
+    if not (0.999 <= total_weight <= 1.001):
+        raise ValueError(f"Painojen summa on {round(total_weight*100, 2)} %, sen pitäisi olla 100 %.")
+
+    return portfolio_df
+
 
 portfolio = []
 
+# Pyydetään käyttäjää syöttämään portfolio
+print("\nSyötä salkkusi osakkeet ja painot muodossa esim:\nAAPL 30%\nMSFT 50%\nKONE.HE 20%")
+print("Kun olet valmis, paina Enter kahdesti.\n")
+
+user_input_lines = []
 while True:
-    user_input = input("\nSyötä osakkeen ticker (tai 'exit' lopettaaksesi): ").upper()
-    if user_input == "EXIT":
+    line = input()
+    if line.strip() == "":
         break
-    analyze_stock(user_input)
-    portfolio.append(user_input)
+    user_input_lines.append(line)
+
+user_input_text = "\n".join(user_input_lines)
+
+try:
+    portfolio_df = parse_portfolio_input(user_input_text)
+    print("\n✅ Portfoliosi luettu onnistuneesti:")
+    print(portfolio_df)
+except ValueError as e:
+    print(f"\n❌ Virhe: {e}")
+
 
 print("\nAnalysoidut osakkeet:", portfolio)
