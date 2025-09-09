@@ -17,9 +17,9 @@ def calculate_metrics(prices):
     returns = prices.pct_change().dropna()
     avg_return = returns.mean()
     volatility = returns.std()
-    sharpe_ratio = avg_return / volatility * np.sqrt(252)  # annualisoitu
+    sharpe_ratio = avg_return / volatility * np.sqrt(252)  
 
-    # Muunnetaan kaikki kelluviksi (varmuuden vuoksi)
+    
     return float(avg_return), float(volatility), float(sharpe_ratio)
 
 
@@ -66,7 +66,7 @@ def parse_portfolio_input(user_input):
 
 portfolio = []
 
-# Pyydetään käyttäjää syöttämään portfolio
+
 print("\nSyötä salkkusi osakkeet (Usa) ja painot muodossa esim:\nAAPL 30%\nMSFT 50%\nKo 20%")
 print("Kun olet valmis, paina Enter kahdesti.\n")
 
@@ -100,7 +100,7 @@ def fetch_data_multi(tickers, start="2023-01-01", end="2024-01-01"):
         print("⚠️ Ei dataa ladattu tickereille:", tickers)
         return None
 
-    # Jos kyseessä on useampi ticker, data on monitasoinen
+    
     if isinstance(data.columns, pd.MultiIndex):
         try:
             adj_close = data['Adj Close']
@@ -109,7 +109,7 @@ def fetch_data_multi(tickers, start="2023-01-01", end="2024-01-01"):
             return None
         return adj_close
 
-    # Yksi ticker: palautetaan suoraan Adj Close -sarake
+    
     elif 'Adj Close' in data.columns:
         return data[['Adj Close']].rename(columns={'Adj Close': tickers if isinstance(tickers, str) else tickers[0]})
     else:
@@ -117,16 +117,16 @@ def fetch_data_multi(tickers, start="2023-01-01", end="2024-01-01"):
         return None
 
 
-import numpy as np  # lisää vain jos tätä ei jo ole ylhäällä
+import numpy as np  
 def calculate_portfolio_metrics(prices, weights):
     """
     Laskee portfolion vuosituoton, volatiliteetin ja Sharpen luvun.
     """
     returns = prices.pct_change().dropna()
-    weights = pd.Series(weights, index=returns.columns)  # <- tämä on tärkeä korjaus!
+    weights = pd.Series(weights, index=returns.columns)  
 
     weights = pd.Series(weights)
-    weights = weights.loc[returns.columns]  # järjestää painot oikein kolumnien mukaan
+    weights = weights.loc[returns.columns]  
  
     portfolio_returns = (returns * weights).sum(axis=1)
 
@@ -218,25 +218,25 @@ if __name__ == "__main__":
             results["sharpe"].append(sharpe)
             results["weights"].append(weights)
 
-        # DataFrame simuloiduista salkuista
+        
         frontier_df = pd.DataFrame({
             "Return": results["returns"],
             "Volatility": results["volatility"],
             "Sharpe": results["sharpe"]
         })
 
-        # Paras Sharpen luku
+        
         max_sharpe_idx = frontier_df["Sharpe"].idxmax()
         optimal_weights = results["weights"][max_sharpe_idx]
 
-        # Oman salkun piste
+        
         if current_weights is not None:
             current_weights = np.array(current_weights)
             current_return = np.dot(current_weights, mean_returns)
             current_volatility = np.sqrt(np.dot(current_weights.T, np.dot(cov_matrix, current_weights)))
             current_sharpe = (current_return - risk_free_rate) / current_volatility
 
-        # Plottaus
+        
         plt.figure(figsize=(10, 6))
         scatter = plt.scatter(frontier_df["Volatility"], frontier_df["Return"],
                             c=frontier_df["Sharpe"], cmap="viridis", alpha=0.7)
@@ -245,12 +245,12 @@ if __name__ == "__main__":
         plt.ylabel("Tuotto")
         plt.title("Tehokas rintama (Efficient Frontier)")
 
-        # Merkitään optimaalinen Sharpe
+        
         plt.scatter(frontier_df.loc[max_sharpe_idx, "Volatility"],
                     frontier_df.loc[max_sharpe_idx, "Return"],
                     color="red", marker="*", s=200, label="Optimaalinen Sharpe")
 
-        # Merkitään oma salkku
+        
         if current_weights is not None:
             plt.scatter(current_volatility, current_return, color="blue", marker="o", s=100, label="Oma salkku")
 
